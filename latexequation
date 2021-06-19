@@ -1,0 +1,47 @@
+#!/bin/bash
+package="latexequation"
+OUTPUT="equation.png"
+while test $# -gt 0; do
+	case "$1" in
+		-h|--help)
+			echo "$package - Write LaTeX equation to png"
+			echo " "
+			echo "$package [options] equation"
+			echo " "
+			echo "options:"
+			echo "-h                show brief help"
+			echo "-o FILE           specify a filename for the output png"
+			echo " "
+			echo "Example:"
+		        echo "$package -o eq1.png 'x=\\frac{3}{y}'"
+			exit 0
+			;;
+		-o)
+			shift
+			if test $# -gt 0; then
+				export OUTPUT=$1
+			else
+				echo "no filename specified"
+				exit 1
+			fi
+			shift
+			;;
+		*)
+			break
+			;;
+	esac
+done
+
+texfile=$TMPDIR/equation.tex
+
+echo '\documentclass{standalone}' > $texfile
+echo '\usepackage{amsmath}' >> $texfile
+echo '\usepackage{siunitx}' >> $texfile
+echo '\begin{document}' >> $texfile
+echo '\(\displaystyle{' >> $texfile
+echo $@ >> $texfile
+echo '}\)\end{document}' >> $texfile
+
+xelatex --file-line-error --interaction=nonstopmode --output-dir=$TMPDIR $texfile
+
+convert -density 300 $TMPDIR/equation.pdf -quality 90 $OUTPUT
